@@ -1,0 +1,53 @@
+---
+# - name: "Prepare the {{ ansible_facts['distribution'] }} guest operating system."
+#   include_tasks: "{{ ansible_facts['distribution'] | lower }}.yml"
+#   when: "ansible_facts['distribution'] == 'Ubuntu'"
+- name: "Prepare the {{ ansible_facts['distribution'] }} guest operating system."
+  include_tasks: el.yml
+  when: "ansible_facts['distribution'] in ['RedHat', 'CentOS', 'Rocky', 'AlmaLinux', 'OracleLinux']"
+# - name: "Prepare the {{ ansible_facts['os_family'] }} guest operating system."
+#   ansible.builtin.include_tasks: windows.yml
+#   when: ansible_facts['os_family'] == 'Windows'
+
+###########################################################
+# Add Plugin Archive at Specified location if Airgap Env
+###########################################################
+- name: Configure Airgap System
+  block:
+    - name: Create Plugin Location on Host
+      ansible.builtin.file:
+        path: '{{ plugin_archive_path }}'
+        owner: '{{ plugin_archive_owner }}'
+        group: '{{ plugin_archive_group }}'
+        mode: '{{ plugin_archive_mode }}'
+        setype: '{{ plugin_archive_setype }}'
+        state: directory
+    - name: Download Packer Plugin Archive to Host
+      ansible.builtin.unarchive:
+        src: '{{ plugin_archive_url }}'
+        dest: '{{ plugin_archive_path }}'
+        owner: '{{ plugin_archive_owner }}'
+        group: '{{ plugin_archive_group }}'
+        setype: '{{ plugin_archive_setype }}'
+        keep_newer: '{{ plugin_archive_keep_newer }}'
+        remote_src: true
+        validate_certs: '{{ trust_repository_certs }}'
+    #######################################################
+    # Set Environment Variable for Airgap Archive
+    #######################################################
+    - name: Set Environment Variable for all Users
+      ansible.builtin.blockinfile:
+        path: "/etc/bashrc"
+        marker: '### {mark} Ansible-Managed Packer Environment ###'
+        block: |
+          export PACKER_PLUGIN_PATH={{ plugin_archive_path }}
+          export CHECKPOINT_DISABLE=1
+    - name: Set Environment Variable for ansible User
+      ansible.builtin.blockinfile:
+        path: "/home/{{ ansible_user }}/.bashrc"
+        marker: '### {mark} Ansible-Managed Packer Environment ###'
+        block: |
+          export PACKER_PLUGIN_PATH={{ plugin_archive_path }}
+          export CHECKPOINT_DISABLE=1
+  when:
+    - airgap
