@@ -1,38 +1,61 @@
-Role Name
-=========
+# Ansible Role: Packer
 
-A brief description of the role goes here.
+Installs the Terraform application and (if required) the modules and plugins
+required to operate the application in an airgap environment.
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+None
 
-Role Variables
---------------
+## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+You can modify any of the following variables as you wish in the role's `defaults/main.yml`:
 
-Dependencies
-------------
+* `airgap`: Boolean if the target is in an airgap'd environment (Default: `false`)
+* `hashicorp_rpm_repo_url`: Full URL to the Hashicorp RPM repository (Default: <https://rpm.releases.hashicorp.com/RHEL/$releasever/$basearch/stable>)
+* `hashicorp_gpg_key_url`: Full URL to the Hashicorp RPM GPG Key (Default: <https://rpm.releases.hashicorp.com/gpg>)
+* `trust_repository_certs`: Boolean if the source repository's certificate is trusted by the target (Default: `true`)
+* `plugin_archive_url`: Full URL to an archive of the Packer Plugins (airgap only)
+* `plugin_archive_path`: Path on the target to create and store the provider archive (airgap only; Default: `/opt/packer`)
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+The following role variables are *safe* defaults and should not need to be modified:
 
-Example Playbook
-----------------
+* `plugin_archive_owner`: File owner for the Provider archive (airgap only; Default: `root`)
+* `plugin_archive_group`: Group owner for the provider files (airgap only; Default: `root`)
+* `plugin_archive_mode`: Directory Mode for the provider files (airgap only; Default: `0755`)
+* `plugin_archive_setype`: SELinux Type for provider files (airgap only; Default: `usr_t`)
+* `plugin_archive_keep_newer`: Boolean if you want to preserve files locally that are newer than the files in the archive (airgap only; Default: `false`)
+
+## Dependencies
+
+None
+
+## Example Playbook
 
 Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+```yaml
+- name: Configure workstations
+  become: true
+  become_method: sudo
+  gather_facts: true
+  hosts: all
+  roles:
+    - role: packer
+      airgap: true
+      hashicorp_rpm_repo_url: "{{ repo_server }}/{{ hashicorp_repo_path }}"
+      hashicorp_gpg_key_url: "{{ repo_server }}/{{ hashicorp_cert_path }}"
+      trust_repository_certs: false
+      plugin_archive_url: "{{ repo_server }}/{{ packer_plugin_archive }}"
+      plugin_archive_path: /opt/packer
+```
 
-License
--------
 
-BSD
+## License
 
-Author Information
-------------------
+MIT
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+## Author Information
+
+Alex Ackerman, GitHub @darkhonor
+
