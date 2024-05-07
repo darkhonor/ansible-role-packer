@@ -1,6 +1,6 @@
 # Ansible Role: Packer
 
-Installs the Terraform application and (if required) the modules and plugins
+Installs the Packer application and (if required) the modules and plugins
 required to operate the application in an airgap environment.
 
 ## Requirements
