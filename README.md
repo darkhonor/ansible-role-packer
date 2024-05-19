@@ -50,7 +50,6 @@ Here is an example playbook using this role:
       plugin_archive_path: /opt/packer
 ```
 
-
 ## License
 
 MIT
@@ -58,4 +57,3 @@ MIT
 ## Author Information
 
 Alex Ackerman, GitHub @darkhonor
-
